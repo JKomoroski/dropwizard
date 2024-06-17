@@ -1,29 +1,71 @@
+---
+# yamllint disable rule:comments rule:line-length
 name: Release
+# yamllint disable-line rule:truthy
 on:
   push:
     tags:
-    - 'v*'
+      - v*
 jobs:
   release:
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
     env:
-      JAVA_OPTS: "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+      JAVA_OPTS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
     steps:
-    - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
-    - name: Set up JDK
-      uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3
-      with:
-        distribution: 'temurin'
-        java-version: '11'
-        cache: 'maven'
-        server-id: ossrh
-        server-username: CI_DEPLOY_USERNAME
-        server-password: CI_DEPLOY_PASSWORD
-        gpg-passphrase: GPG_PASSPHRASE
-        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-    - name: Build and Deploy
-      run: ./mvnw -B -V -ntp -DperformRelease=true deploy
-      env:
-        CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
-        CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
-        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4
+        with:
+          distribution: temurin
+          java-version: "11"
+          cache: maven
+          server-id: ossrh
+          server-username: CI_DEPLOY_USERNAME
+          server-password: CI_DEPLOY_PASSWORD
+      - name: Build and Deploy
+        run: ./mvnw -B -V -ntp -DperformRelease=true deploy
+        env:
+          CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
+          CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      - name: Project version
+        id: project-version
+        env:
+          CURRENT_TAG: ${{github.ref_name}}
+        run: |
+          VERSION=$(./mvnw help:evaluate -q -B -ntp -Dexpression=project.version -DforceStdout=true)
+          PREV_TAG=$(git tag | sort --version-sort | grep -B1 "${CURRENT_TAG}" | head -n1)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "current_tag=${CURRENT_TAG}" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=${PREV_TAG}" >> "$GITHUB_OUTPUT"
+          echo "ref_name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+      - name: JReleaser
+        id: jreleaser
+        uses: jreleaser/release-action@v2
+        with:
+          arguments: full-release
+        env:
+          JRELEASER_PROJECT_VERSION: ${{ steps.project-version.outputs.version }}
+          JRELEASER_BRANCH: ${{ steps.project-version.outputs.ref_name }}
+          JRELEASER_TAG_NAME: ${{ steps.project-version.outputs.current_tag }}
+          JRELEASER_PREVIOUS_TAG_NAME: ${{ steps.project-version.outputs.previous_tag }}
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JRELEASER_GITHUB_USERNAME: ${{ github.actor }}
+          JRELEASER_TWITTER_CONSUMER_KEY: ${{ secrets.TWITTER_CONSUMER_KEY }}
+          JRELEASER_TWITTER_CONSUMER_SECRET: ${{ secrets.TWITTER_CONSUMER_SECRET }}
+          JRELEASER_TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          JRELEASER_TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          JRELEASER_MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          JRELEASER_BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          JRELEASER_BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+      - name: JReleaser release output
+        if: ${{ always() && steps.jreleaser.conclusion != 'skipped' }}
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4
+        with:
+          name: jreleaser-release
+          path: |
+            out/jreleaser/trace.log
+            out/jreleaser/output.properties

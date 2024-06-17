@@ -1,0 +1,5 @@
+---
+type: console
+layout:
+    type: custom-json
+    messageSize: 0

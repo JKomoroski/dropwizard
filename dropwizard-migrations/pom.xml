@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.dropwizard</groupId>
         <artifactId>dropwizard-parent</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>3.0.8-SNAPSHOT</version>
         <relativePath>../dropwizard-parent</relativePath>
     </parent>
 
@@ -40,6 +40,10 @@
                 <exclusion>
                     <groupId>javax.xml.bind</groupId>
                     <artifactId>jaxb-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.activation</groupId>
+                    <artifactId>javax.activation-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -99,4 +103,64 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <includePluginDependencies>true</includePluginDependencies>
+                    <mainClass>org.h2.tools.RunScript</mainClass>
+                    <arguments>
+                        <argument>-user</argument>
+                        <argument>sa</argument>
+                        <argument>-url</argument>
+                        <argument>jdbc:h2:file:${project.basedir}/src/test/resources/test-db</argument>
+                        <argument>-script</argument>
+                        <argument>${project.basedir}/src/test/resources/test-db-backup.sql</argument>
+                    </arguments>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>test-db-creation</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.h2database</groupId>
+                        <artifactId>h2</artifactId>
+                        <version>${h2.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>clean-test-db</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.basedir}/src/test/resources</directory>
+                                    <includes>
+                                        <include>test-db.mv.db</include>
+                                    </includes>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

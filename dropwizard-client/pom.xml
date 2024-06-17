@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.dropwizard</groupId>
         <artifactId>dropwizard-parent</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>3.0.8-SNAPSHOT</version>
         <relativePath>../dropwizard-parent</relativePath>
     </parent>
 
@@ -19,15 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-configuration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-jackson</artifactId>
         </dependency>
         <dependency>
             <groupId>io.dropwizard</groupId>
@@ -48,10 +40,6 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-healthchecks</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -134,13 +122,23 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
+            <groupId>org.glassfish.jersey.ext.rx</groupId>
+            <artifactId>jersey-rx-client-rxjava2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.ext.rx</groupId>
-            <artifactId>jersey-rx-client-rxjava2</artifactId>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-healthchecks</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-configuration</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-jackson</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -150,8 +148,24 @@
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
+            <artifactId>bcprov-jdk18on</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <configuration>
+                <ignoredNonTestScopedDependencies>
+                    <!-- required for org.eclipse.jetty.util.component.LifeCycle -->
+                    <ignoredNonTestScopedDependency>
+                        org.eclipse.jetty:jetty-util
+                    </ignoredNonTestScopedDependency>
+                </ignoredNonTestScopedDependencies>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
 </project>

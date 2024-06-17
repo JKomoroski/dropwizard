@@ -5,14 +5,14 @@
     <parent>
         <artifactId>dropwizard-parent</artifactId>
         <groupId>io.dropwizard</groupId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>3.0.8-SNAPSHOT</version>
         <relativePath>../dropwizard-parent</relativePath>
     </parent>
 
     <properties>
         <!-- see https://issues.apache.org/jira/browse/MCOMPILER-235 -->
         <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
-        <jmh.version>1.36</jmh.version>
+        <jmh.version>1.37</jmh.version>
         <cyclonedx.skip>true</cyclonedx.skip>
         <maven.source.skip>true</maven.source.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
@@ -64,6 +64,16 @@
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.glassfish.hk2.external</groupId>
+                    <artifactId>jakarta.inject</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
